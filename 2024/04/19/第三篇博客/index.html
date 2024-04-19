@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/180.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="[GROMACS]使用Sobtop创建Cu-MET的拓扑文件 - 学习记录（二） 1使用Gaussian做优化和振动分析 从Advancing Structural Science | CCDC (cam.ac.uk) 获得Cu-MET分子结构文件.mol2 。去掉多余的阴离子，并写入体系的电荷，和自旋多重度&#x3D;2S + 1,（对于铜离子，我是这样理解的，其最外层电子结构为3d9， 可能自旋多重度为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="荣">
+<meta property="og:url" content="http://example.com/2024/04/19/%E7%AC%AC%E4%B8%89%E7%AF%87%E5%8D%9A%E5%AE%A2/index.html">
+<meta property="og:site_name" content="荣">
+<meta property="og:description" content="[GROMACS]使用Sobtop创建Cu-MET的拓扑文件 - 学习记录（二） 1使用Gaussian做优化和振动分析 从Advancing Structural Science | CCDC (cam.ac.uk) 获得Cu-MET分子结构文件.mol2 。去掉多余的阴离子，并写入体系的电荷，和自旋多重度&#x3D;2S + 1,（对于铜离子，我是这样理解的，其最外层电子结构为3d9， 可能自旋多重度为">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-19T05:31:08.692Z">
+<meta property="article:modified_time" content="2024-04-19T05:32:07.064Z">
+<meta property="article:author" content="Rong-z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/04/19/%E7%AC%AC%E4%B8%89%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | 荣</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">荣</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/19/%E7%AC%AC%E4%B8%89%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Rong-z">
+      <meta itemprop="description" content="得意失意，切莫在意">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荣">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+        
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-04-19 13:31:08 / 修改时间：13:32:07" itemprop="dateCreated datePublished" datetime="2024-04-19T13:31:08+08:00">2024-04-19</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="GROMACS-使用Sobtop创建Cu-MET的拓扑文件-学习记录（二）">[GROMACS]使用Sobtop创建Cu-MET的拓扑文件 - 学习记录（二）</h2>
+<h3 id="1使用Gaussian做优化和振动分析">1使用Gaussian做优化和振动分析</h3>
+<p>从<a target="_blank" rel="noopener" href="https://www.ccdc.cam.ac.uk/">Advancing Structural Science | CCDC (cam.ac.uk)</a> 获得Cu-MET分子结构文件<code>.mol2</code> 。去掉多余的阴离子，并写入体系的电荷，和<strong>自旋多重度</strong>=2S + 1,（对于铜离子，我是这样理解的，其最外层电子结构为3d9， 可能自旋多重度为2 ，4， 6 …）。对于过度金属配合物，选择TPSSh/def2-TZVP级别进行计算。输入文件：</p>
+<span id="more"></span>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">%chk=Cu-MET.chk</span><br><span class="line">#p tpssh/def2tzvp opt freq</span><br><span class="line"></span><br><span class="line">Molecule Name</span><br><span class="line"></span><br><span class="line">2 2</span><br><span class="line"> Cu                 0.68340000   11.65550000    4.11380000</span><br><span class="line"> N                  1.33280000    8.49740000    4.66170000</span><br><span class="line"> H                  1.55210000    7.67890000    4.81240000</span><br><span class="line"> N                  1.31460000    7.86950000    2.44020000</span><br><span class="line"> N                  0.90890000   10.57550000    5.67970000</span><br><span class="line"> H                  0.82250000   10.98660000    6.43030000</span><br><span class="line"> N                  1.30830000    8.68050000    6.95030000</span><br><span class="line"> H                  1.21690000    9.12340000    7.68160000</span><br><span class="line"> H                  1.48430000    7.83770000    6.97690000</span><br><span class="line"> C                  1.17630000    8.86180000    3.32770000</span><br><span class="line"> C                  1.17530000    9.30280000    5.76600000</span><br><span class="line"> C                  1.38130000    8.17970000    1.00880000</span><br><span class="line"> H                  0.50800000    8.08810000    0.62020000</span><br><span class="line"> H                  1.98860000    7.57420000    0.57790000</span><br><span class="line"> H                  1.69030000    9.08230000    0.89120000</span><br><span class="line"> C                  1.34520000    6.46410000    2.78100000</span><br><span class="line"> H                  2.19410000    6.24920000    3.17330000</span><br><span class="line"> H                  1.21660000    5.94090000    1.98720000</span><br><span class="line"> H                  0.64440000    6.27350000    3.40850000</span><br><span class="line"> O                 -0.25100000   12.62370000    2.64970000</span><br><span class="line"> H                 -0.88640000   12.12100000    2.25180000</span><br><span class="line"> H                  0.29530000   12.80310000    1.95320000</span><br><span class="line"> N                  0.91290000   10.09890000    3.00980000</span><br><span class="line"> H                  0.82810000   10.24100000    2.16550000</span><br><span class="line"> O                  2.91340000   12.56390000    3.55830000</span><br><span class="line"> H                  3.00980000   13.33380000    4.02780000</span><br><span class="line"> H                  3.45680000   11.87430000    3.25050000</span><br><span class="line"> O                  0.51290000   13.25530000    5.25800000</span><br><span class="line"> H                  0.80900000   14.03840000    4.85740000</span><br><span class="line"> H                  1.05740000   13.24220000    6.00580000</span><br><span class="line"> </span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+<p>之后，使用formchk转化文件格式。使用GaussView打开<code>.fchk</code> 文件，确定连接情况（只看连接），然后保存文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$formchk Cu-MET.chk</span><br></pre></td></tr></table></figure>
+<h3 id="2-计算RESP电荷">2 计算RESP电荷</h3>
+<p>标准RESP电荷计算：<code>.fchk</code> 文件载入Multiwfn，依次输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">7  //布居分析与原子电荷计算</span><br><span class="line">18  //RESP模块</span><br><span class="line">1  //计算标准RESP电荷</span><br></pre></td></tr></table></figure>
+<p>对于对称性高的的配合物，应当设置等价性：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">7  //计算原子电荷</span><br><span class="line">18  //计算RESP电荷</span><br><span class="line">5  //等价性约束设置</span><br><span class="line">11  //根据点群自动判断等价性</span><br><span class="line">a  //根据整个体系的结构判断点群</span><br><span class="line">y  //当前屏幕上显示的点群确实是xxx，列出的原子等价性没错，所以这里输入y确认。然后当前目录下有了等价性设置文件eqvcons_PG.txt</span><br><span class="line">q  //返回</span><br><span class="line">1  //从文本文件里读取等价性设置</span><br><span class="line">eqvcons_PG.txt  //刚才产生的文件</span><br><span class="line">2  //开始一步式RESP电荷拟合</span><br><span class="line">[回车]  //程序提示,缺半径，按回车表示用推荐的半径</span><br><span class="line">Multiwfn算RESP电荷效率很高，RESP电荷很快就产生了，从屏幕上给出的结果看确实原子电荷合理，而且满足等价性。按y把产生的原子电荷导出为当前目录下的xxx.chg。</span><br></pre></td></tr></table></figure>
+<h3 id="3-用Sobtop产生拓扑文件">3 用Sobtop产生拓扑文件</h3>
+<p>将<code>Cu-MET.mol2</code> 载入Sobtop，然后输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">7  //指定原子电荷</span><br><span class="line">10  //从Multiwfn的chg文件中读取原子电荷</span><br><span class="line">Cu-MET.chg</span><br><span class="line">0  //返回</span><br><span class="line">2  //产生GROMACS的.gro文件</span><br><span class="line">[回车]  //此时当前目录下产生了Cu-MET.gro</span><br><span class="line">1  //产生GROMACS的拓扑文件</span><br><span class="line">2  //优先用GAFF原子类型，缺的自动用UFF力场的。原子类型决定了拓扑文件里的LJ参数</span><br><span class="line">2  //所有成键相关参数基于振动分析产生的fchk文件里的Hessian矩阵生成</span><br><span class="line">Cu-MET.fchk  //如果此文件和Cu-MET.mol2在相同目录下，此处直接按回车可以快捷载入</span><br><span class="line">[回车]  //在当前目录下产生Cu-MET.top</span><br><span class="line">[回车]  //在当前目录下产生Cu-MET.itp</span><br></pre></td></tr></table></figure>
+<p><strong>注意事项：</strong> 我在载入<code>.mol2</code> 文件的时候出现了，程序闪退的现象。然后使用Multiwfn将Gaussian的<code>.fchk</code> 文件转换为<code>.pdb</code> 文件，之后使用GaussView将<code>.pdb</code> 转化为<code>.mol2</code> ，再次载入Sobtop，就不会出现闪退了。但是，之后载入<code>.chg</code> 文件 出现闪退。我的解决方案是，不载入<code>.chg</code> 文件，将生成的<code>.itp</code> 文件，手动修改电荷。</p>
+<h3 id="4-测试拓扑文件的合理性">4 测试拓扑文件的合理性</h3>
+<p>根据<a target="_blank" rel="noopener" href="https://manual.gromacs.org/current/user-guide/mdp-options.html">Molecular dynamics parameters (.mdp options) - GROMACS 2024.1 documentation</a> 设置参数，理解各个选项的含义。NVT模拟，在<code>.gro</code> 文件设置盒子的大小，方向。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">integrator               = md        </span><br><span class="line">dt                       = 0.001     ; 2 fs</span><br><span class="line">nsteps                   = 100000     ;  ns</span><br><span class="line"></span><br><span class="line">nstenergy                = 500</span><br><span class="line">nstlog                   = 500</span><br><span class="line">nstxout-compressed       = 500</span><br><span class="line"></span><br><span class="line">gen-vel                  = yes</span><br><span class="line">gen-temp                 = 298.15</span><br><span class="line"></span><br><span class="line">constraint-algorithm     = lincs</span><br><span class="line">constraints              = h-bonds</span><br><span class="line"></span><br><span class="line">cutoff-scheme            = Verlet</span><br><span class="line"></span><br><span class="line">coulombtype              = PME</span><br><span class="line">rcoulomb                 = 1.0</span><br><span class="line"></span><br><span class="line">vdwtype                  = Cut-off</span><br><span class="line">rvdw                     = 1.0</span><br><span class="line">DispCorr                 = EnerPres</span><br><span class="line"></span><br><span class="line">tcoupl                   = Nose-Hoover</span><br><span class="line">tc-grps                  = System</span><br><span class="line">tau-t                    = 2.0</span><br><span class="line">ref-t                    = 298.15</span><br><span class="line">nhchainlength            = 1</span><br></pre></td></tr></table></figure>
+<p>计算方式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$gmx_mpi grompp -f md.mdp -c Cu-MET.gro -p Cu-MET.top -o md.tpr</span><br><span class="line">$gmx_mpi mdrun -v -deffnm md</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>您的支持将鼓励我继续创作!</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Rong-z 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rong-z
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2024/04/19/%E7%AC%AC%E4%B8%89%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="">http://example.com/2024/04/19/第三篇博客/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E7%AC%AC%E4%BA%8C%E7%AF%87%E5%8D%9A%E5%AE%A2/" rel="prev" title="第二篇博客">
+      <i class="fa fa-chevron-left"></i> 第二篇博客
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GROMACS-%E4%BD%BF%E7%94%A8Sobtop%E5%88%9B%E5%BB%BACu-MET%E7%9A%84%E6%8B%93%E6%89%91%E6%96%87%E4%BB%B6-%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95%EF%BC%88%E4%BA%8C%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">[GROMACS]使用Sobtop创建Cu-MET的拓扑文件 - 学习记录（二）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%E4%BD%BF%E7%94%A8Gaussian%E5%81%9A%E4%BC%98%E5%8C%96%E5%92%8C%E6%8C%AF%E5%8A%A8%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">1使用Gaussian做优化和振动分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%AE%A1%E7%AE%97RESP%E7%94%B5%E8%8D%B7"><span class="nav-number">1.2.</span> <span class="nav-text">2 计算RESP电荷</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E7%94%A8Sobtop%E4%BA%A7%E7%94%9F%E6%8B%93%E6%89%91%E6%96%87%E4%BB%B6"><span class="nav-number">1.3.</span> <span class="nav-text">3 用Sobtop产生拓扑文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%B5%8B%E8%AF%95%E6%8B%93%E6%89%91%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%88%E7%90%86%E6%80%A7"><span class="nav-number">1.4.</span> <span class="nav-text">4 测试拓扑文件的合理性</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rong-z"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Rong-z</p>
+  <div class="site-description" itemprop="description">得意失意，切莫在意</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024-4 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rong-z</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <span id="busuanzi_container_site_pv">总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">总访客数<span id="busuanzi_value_site_uv"></span>人</span>
+    <span class="post-meta-divider">|</span>
+<!-- 不蒜子计数初始值纠正 -->
+<script>
+$(document).ready(function() {
+
+    var int = setInterval(fixCount, 50);  // 50ms周期检测函数
+    var countOffset = 20000;  // 初始化首次数据
+
+    function fixCount() {            
+       if (document.getElementById("busuanzi_container_site_pv").style.display != "none")
+        {
+            $("#busuanzi_value_site_pv").html(parseInt($("#busuanzi_value_site_pv").html()) + countOffset); 
+            clearInterval(int);
+        }                  
+        if ($("#busuanzi_container_site_pv").css("display") != "none")
+        {
+            $("#busuanzi_value_site_uv").html(parseInt($("#busuanzi_value_site_uv").html()) + countOffset); // 加上初始数据 
+            clearInterval(int); // 停止检测
+        }  
+    }
+       	
+});
+</script> 
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
