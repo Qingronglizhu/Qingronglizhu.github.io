@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/180.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="[GROMACS]产生SO4的GROMACS的拓扑和gro文件：力常数全基于Hessian计算得到 1 Gaussian对SO4做优化和振动分析 首先用Gaussian对SO4做优化+振动分析并保留.fch&#x2F;fchk文件，里面包含了要用的笛卡尔Hessian矩阵和优化后的坐标信息。然后把优化后的结构保存成mol2文件。注意此文件里的键连关系必须和实际要产生的力场项对应，在GaussView里可以肉">
+<meta property="og:type" content="article">
+<meta property="og:title" content="荣">
+<meta property="og:url" content="http://example.com/2024/04/20/%E7%AC%AC%E5%9B%9B%E7%AF%87%E5%8D%9A%E5%AE%A2/index.html">
+<meta property="og:site_name" content="荣">
+<meta property="og:description" content="[GROMACS]产生SO4的GROMACS的拓扑和gro文件：力常数全基于Hessian计算得到 1 Gaussian对SO4做优化和振动分析 首先用Gaussian对SO4做优化+振动分析并保留.fch&#x2F;fchk文件，里面包含了要用的笛卡尔Hessian矩阵和优化后的坐标信息。然后把优化后的结构保存成mol2文件。注意此文件里的键连关系必须和实际要产生的力场项对应，在GaussView里可以肉">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-20T02:35:06.623Z">
+<meta property="article:modified_time" content="2024-04-20T03:51:13.047Z">
+<meta property="article:author" content="Rong-z">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2024/04/20/%E7%AC%AC%E5%9B%9B%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | 荣</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">荣</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/20/%E7%AC%AC%E5%9B%9B%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Rong-z">
+      <meta itemprop="description" content="得意失意，切莫在意">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荣">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+        
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-04-20 10:35:06 / 修改时间：11:51:13" itemprop="dateCreated datePublished" datetime="2024-04-20T10:35:06+08:00">2024-04-20</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="GROMACS-产生SO4的GROMACS的拓扑和gro文件：力常数全基于Hessian计算得到">[GROMACS]<strong>产生SO4的GROMACS的拓扑和gro文件：力常数全基于Hessian计算得到</strong></h2>
+<h3 id="1-Gaussian对SO4做优化和振动分析">1 Gaussian对SO4做优化和振动分析</h3>
+<p>首先用Gaussian对SO4做优化+振动分析并保留.fch/fchk文件，里面包含了要用的笛卡尔Hessian矩阵和优化后的坐标信息。然后把优化后的结构保存成mol2文件。注意此文件里的键连关系必须和实际要产生的力场项对应，在GaussView里可以肉眼检查，不符的话就调整。只要连接关系正确就行，而成键方式随意。本例中，使用对于无机刚性体系都可以得到拓扑文件。</p>
+<span id="more"></span>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">%chk=SO4.chk</span><br><span class="line">#p tpssh/def2tzvp opt freq</span><br><span class="line"></span><br><span class="line">Molecule Name</span><br><span class="line"></span><br><span class="line">-2 1</span><br><span class="line"> S                  0.80990000   12.41490000    8.99380000</span><br><span class="line"> O                  1.83470000   12.61620000   10.04100000</span><br><span class="line"> O                 -0.47150000   12.99740000    9.43000000</span><br><span class="line"> O                  1.25950000   13.15250000    7.77620000</span><br><span class="line"> O                  0.65810000   11.01280000    8.68580000</span><br><span class="line"> </span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+<p>将<code>.mol2</code> 文件载入Sobtop，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">2 //产生gro文件</span><br><span class="line">[回车] //默认的gro文件产生路径</span><br><span class="line">-1 //设置产生力常数的方法</span><br><span class="line">4 //DRIH方法</span><br><span class="line">1 //产生GROMACS拓扑文件</span><br><span class="line">2 //指认GAFF原子类型，没法指认的自动用UFF原子类型</span><br><span class="line">2 //所有力常数都通过DRIH方法得到</span><br><span class="line">SO4.fchk　//Gaussian的freq任务得到的，用于给Sobtop提供Hessian矩阵。这一步用ORCA的freq任务产生的.hess文件、xtb的--ohess任务产生的名为hessian的文件、CP2K振动分析的输出文件亦可</span><br><span class="line">[回车] //用默认的top文件产生路径</span><br><span class="line">[回车] //用默认的itp文件产生路径</span><br></pre></td></tr></table></figure>
+<p>当前目录下已经有了SO4.itp、SO4.top和SO4.gro。此例原子类型都是GAFF的，平衡键长来自SO4.fchk，力常数使用DRIH方法基于Hessian产生。SO4.itp里包含的是SO4分子的拓扑信息，包括定义此分子的[ moleculetype ]字段，以及定义其中涉及到的原子类型的[ atomtypes ]字段。由[ moleculetype ]下面的信息可见Sobtop自动设的分子名就是结构文件去除后缀后的名字。SO4.top是主top文件，包含了GAFF/AMBER力场下模拟适用的[ defaults ]字段、整个体系名[ system ]字段，以及分子数目字段[ molecules ]。</p>
+<p>等价性RESP电荷计算，启动Multiwfn，然后载入<code>.fchk</code> 文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">7  //计算原子电荷</span><br><span class="line">18  //计算RESP电荷</span><br><span class="line">5  //等价性约束设置</span><br><span class="line">11  //根据点群自动判断等价性</span><br><span class="line">a  //根据整个体系的结构判断点群</span><br><span class="line">y  //当前屏幕上显示的点群是，列出的原子等价性没错，所以这里输入y确认。然后当前目录下有了等价性设置文件eqvcons_PG.txt</span><br><span class="line">q  //返回</span><br><span class="line">1  //从文本文件里读取等价性设置</span><br><span class="line">eqvcons_PG.txt  //刚才产生的文件</span><br><span class="line">2  //开始一步式RESP电荷拟合</span><br><span class="line">[回车]  //程序提示缺半径，按回车表示用推荐的半径</span><br><span class="line">Multiwfn算RESP电荷效率很高，RESP电荷很快就产生了，从屏幕上给出的结果看确实原子电荷合理，而且满足等价性。按y把产生的原子电荷导出为当前目录下的.chg。</span><br></pre></td></tr></table></figure>
+<p>得到<code>SO4.chg</code> 文件，手动修改上一步得到的<code>SO4.itp</code> 文件。</p>
+<h3 id="2-Packmol建模">2 Packmol建模</h3>
+<p><strong>注意事项：</strong> 由于建模的<code>.pbd</code> 文件会用于后续的GROMACS模拟，因此格式非常重要。（常常需要手动修改原子的名称，确保其不重复）</p>
+<p>其中，Cu-MET.pdb：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">HETATM    1 Cu1  MOL A   1       6.196   3.873   2.351                      Cu</span><br><span class="line">HETATM    2 N2   MOL A   1       3.186   5.020   2.737                       N</span><br><span class="line">HETATM    3 H3   MOL A   1       2.289   5.358   3.053                       H</span><br><span class="line">HETATM    4 N4   MOL A   1       2.107   2.991   2.520                       N</span><br><span class="line">HETATM    5 N5   MOL A   1       5.424   5.638   2.437                       N</span><br><span class="line">HETATM    6 H6   MOL A   1       6.029   6.426   2.230                       H</span><br><span class="line">HETATM    7 N7   MOL A   1       3.747   7.242   2.688                       N</span><br><span class="line">HETATM    8 H8   MOL A   1       4.405   8.006   2.672                       H</span><br><span class="line">HETATM    9 H9   MOL A   1       2.773   7.490   2.604                       H</span><br><span class="line">HETATM   10 C10  MOL A   1       3.271   3.653   2.523                       C</span><br><span class="line">HETATM   11 C11  MOL A   1       4.174   5.972   2.603                       C</span><br><span class="line">HETATM   12 C12  MOL A   1       2.114   1.523   2.458                       C</span><br><span class="line">HETATM   13 H13  MOL A   1       2.352   1.170   1.451                       H</span><br><span class="line">HETATM   14 H14  MOL A   1       1.125   1.164   2.728                       H</span><br><span class="line">HETATM   15 H15  MOL A   1       2.827   1.118   3.179                       H</span><br><span class="line">HETATM   16 C16  MOL A   1       0.807   3.684   2.522                       C</span><br><span class="line">HETATM   17 H17  MOL A   1       0.565   4.082   3.513                       H</span><br><span class="line">HETATM   18 H18  MOL A   1       0.040   2.962   2.255                       H</span><br><span class="line">HETATM   19 H19  MOL A   1       0.788   4.477   1.772                       H</span><br><span class="line">HETATM   20 O20  MOL A   1       7.172   2.159   1.707                       O</span><br><span class="line">HETATM   21 H21  MOL A   1       7.011   1.625   0.916                       H</span><br><span class="line">HETATM   22 H22  MOL A   1       7.384   1.567   2.447                       H</span><br><span class="line">HETATM   23 N23  MOL A   1       4.444   3.078   2.364                       N</span><br><span class="line">HETATM   24 H24  MOL A   1       4.373   2.098   2.120                       H</span><br><span class="line">HETATM   25 O25  MOL A   1       6.962   2.784   4.378                       O</span><br><span class="line">HETATM   26 H26  MOL A   1       7.752   2.972   4.906                       H</span><br><span class="line">HETATM   27 H27  MOL A   1       6.297   2.493   5.018                       H</span><br><span class="line">HETATM   28 O28  MOL A   1       8.054   4.709   2.129                       O</span><br><span class="line">HETATM   29 H29  MOL A   1       8.730   4.173   1.688                       H</span><br><span class="line">HETATM   30 H30  MOL A   1       8.503   5.278   2.770                       H</span><br><span class="line">END</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>SO4.pdb:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HETATM    1  S1   MOL A   1       0.000   0.000  -0.000  1.00  0.00           S</span><br><span class="line">HETATM    2  O2   MOL A   1       1.140   0.968  -0.153  1.00  0.00           O</span><br><span class="line">HETATM    3  O3   MOL A   1      -1.304   0.740  -0.110  1.00  0.00           O</span><br><span class="line">HETATM    4  O4   MOL A   1       0.078  -1.041  -1.082  1.00  0.00           O</span><br><span class="line">HETATM    5  O5   MOL A   1       0.086  -0.667   1.345  1.00  0.00           O</span><br><span class="line">END</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>将上面文件合并成一个pdb文件，<code>mix_in.pdb</code>使用GaussView观察结构的合理性(注意合并的格式需要保持一致)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">HETATM    1 Cu1  MOL A   1       6.196   3.873   2.351                      Cu</span><br><span class="line">HETATM    2 N2   MOL A   1       3.186   5.020   2.737                       N</span><br><span class="line">HETATM    3 H3   MOL A   1       2.289   5.358   3.053                       H</span><br><span class="line">HETATM    4 N4   MOL A   1       2.107   2.991   2.520                       N</span><br><span class="line">HETATM    5 N5   MOL A   1       5.424   5.638   2.437                       N</span><br><span class="line">HETATM    6 H6   MOL A   1       6.029   6.426   2.230                       H</span><br><span class="line">HETATM    7 N7   MOL A   1       3.747   7.242   2.688                       N</span><br><span class="line">HETATM    8 H8   MOL A   1       4.405   8.006   2.672                       H</span><br><span class="line">HETATM    9 H9   MOL A   1       2.773   7.490   2.604                       H</span><br><span class="line">HETATM   10 C10  MOL A   1       3.271   3.653   2.523                       C</span><br><span class="line">HETATM   11 C11  MOL A   1       4.174   5.972   2.603                       C</span><br><span class="line">HETATM   12 C12  MOL A   1       2.114   1.523   2.458                       C</span><br><span class="line">HETATM   13 H13  MOL A   1       2.352   1.170   1.451                       H</span><br><span class="line">HETATM   14 H14  MOL A   1       1.125   1.164   2.728                       H</span><br><span class="line">HETATM   15 H15  MOL A   1       2.827   1.118   3.179                       H</span><br><span class="line">HETATM   16 C16  MOL A   1       0.807   3.684   2.522                       C</span><br><span class="line">HETATM   17 H17  MOL A   1       0.565   4.082   3.513                       H</span><br><span class="line">HETATM   18 H18  MOL A   1       0.040   2.962   2.255                       H</span><br><span class="line">HETATM   19 H19  MOL A   1       0.788   4.477   1.772                       H</span><br><span class="line">HETATM   20 O20  MOL A   1       7.172   2.159   1.707                       O</span><br><span class="line">HETATM   21 H21  MOL A   1       7.011   1.625   0.916                       H</span><br><span class="line">HETATM   22 H22  MOL A   1       7.384   1.567   2.447                       H</span><br><span class="line">HETATM   23 N23  MOL A   1       4.444   3.078   2.364                       N</span><br><span class="line">HETATM   24 H24  MOL A   1       4.373   2.098   2.120                       H</span><br><span class="line">HETATM   25 O25  MOL A   1       6.962   2.784   4.378                       O</span><br><span class="line">HETATM   26 H26  MOL A   1       7.752   2.972   4.906                       H</span><br><span class="line">HETATM   27 H27  MOL A   1       6.297   2.493   5.018                       H</span><br><span class="line">HETATM   28 O28  MOL A   1       8.054   4.709   2.129                       O</span><br><span class="line">HETATM   29 H29  MOL A   1       8.730   4.173   1.688                       H</span><br><span class="line">HETATM   30 H30  MOL A   1       8.503   5.278   2.770                       H</span><br><span class="line">HETATM   1  S1   MOL A   1       0.000   0.000  -0.000                       S</span><br><span class="line">HETATM   2  O2   MOL A   1       1.140   0.968  -0.153                       O</span><br><span class="line">HETATM   3  O3   MOL A   1      -1.304   0.740  -0.110                       O</span><br><span class="line">HETATM   4  O4   MOL A   1       0.078  -1.041  -1.082                       O</span><br><span class="line">HETATM   5  O5   MOL A   1       0.086  -0.667   1.345                       O</span><br><span class="line">END</span><br></pre></td></tr></table></figure>
+<p>然后构建Packmol输入文件<code>mix.inp</code>：(注意合并的格式需要保持一致)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tolerance 2.0</span><br><span class="line">add_box_sides 1.2</span><br><span class="line">output mix_out.pdb</span><br><span class="line">structure mix_in.pdb</span><br><span class="line">  number 1000</span><br><span class="line">  inside cube 0. 0. 0. 100.</span><br><span class="line">end structure</span><br></pre></td></tr></table></figure>
+<p>建模需要根据实际情况设置分子的个数，之后使用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$gmx_mpi editconf -f mix_out.pdb -o mix_out.gro</span><br></pre></td></tr></table></figure>
+<p>将<code>.pdb</code>转化为<code>.gro</code> 文件。使用VScode进行编辑的时候需要用到多行匹配：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">^(.*?)(S1).*(?:.|\n).*(?:.|\n).*(?:.|\n).*(?:.|\n).*</span><br></pre></td></tr></table></figure>
+<p>删除空行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">^\s*(?=\r?$)\n</span><br></pre></td></tr></table></figure>
+<p>建模使用的GROMACS语句，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$gmx_mpi solvate -cp conf.gro -o conf.gro -cs tip4p -p topol.top -box 2.3 2.3 2.3</span><br></pre></td></tr></table></figure>
+<p>能量最小化：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ gmx_mpi grompp -f mdp/min.mdp -o min.tpr -pp min.top -po min.mdp</span><br><span class="line">$ gmx_mpi mdrun -s min.tpr -o min.trr -x min.xtc -c min.gro -e min.edr -g min.log</span><br><span class="line"></span><br><span class="line">$ gmx_mpi grompp -f mdp/min2.mdp -o min2.tpr -pp min2.top -po min2.mdp -c min.gro</span><br><span class="line">$ gmx_mpi mdrun -s min2.tpr -o min2.trr -x min2.xtc -c min2.gro -e min2.edr -g min2.log</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>您的支持将鼓励我继续创作!</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Rong-z 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rong-z
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2024/04/20/%E7%AC%AC%E5%9B%9B%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="">http://example.com/2024/04/20/第四篇博客/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E7%AC%AC%E4%BA%8C%E7%AF%87%E5%8D%9A%E5%AE%A2/" rel="prev" title="第二篇博客">
+      <i class="fa fa-chevron-left"></i> 第二篇博客
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GROMACS-%E4%BA%A7%E7%94%9FSO4%E7%9A%84GROMACS%E7%9A%84%E6%8B%93%E6%89%91%E5%92%8Cgro%E6%96%87%E4%BB%B6%EF%BC%9A%E5%8A%9B%E5%B8%B8%E6%95%B0%E5%85%A8%E5%9F%BA%E4%BA%8EHessian%E8%AE%A1%E7%AE%97%E5%BE%97%E5%88%B0"><span class="nav-number">1.</span> <span class="nav-text">[GROMACS]产生SO4的GROMACS的拓扑和gro文件：力常数全基于Hessian计算得到</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Gaussian%E5%AF%B9SO4%E5%81%9A%E4%BC%98%E5%8C%96%E5%92%8C%E6%8C%AF%E5%8A%A8%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">1 Gaussian对SO4做优化和振动分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Packmol%E5%BB%BA%E6%A8%A1"><span class="nav-number">1.2.</span> <span class="nav-text">2 Packmol建模</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rong-z"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Rong-z</p>
+  <div class="site-description" itemprop="description">得意失意，切莫在意</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024-4 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rong-z</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <span id="busuanzi_container_site_pv">总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">总访客数<span id="busuanzi_value_site_uv"></span>人</span>
+    <span class="post-meta-divider">|</span>
+<!-- 不蒜子计数初始值纠正 -->
+<script>
+$(document).ready(function() {
+
+    var int = setInterval(fixCount, 50);  // 50ms周期检测函数
+    var countOffset = 20000;  // 初始化首次数据
+
+    function fixCount() {            
+       if (document.getElementById("busuanzi_container_site_pv").style.display != "none")
+        {
+            $("#busuanzi_value_site_pv").html(parseInt($("#busuanzi_value_site_pv").html()) + countOffset); 
+            clearInterval(int);
+        }                  
+        if ($("#busuanzi_container_site_pv").css("display") != "none")
+        {
+            $("#busuanzi_value_site_uv").html(parseInt($("#busuanzi_value_site_uv").html()) + countOffset); // 加上初始数据 
+            clearInterval(int); // 停止检测
+        }  
+    }
+       	
+});
+</script> 
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
