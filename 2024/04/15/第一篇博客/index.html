@@ -19,7 +19,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="[GROMACS] Water - 学习记录（一）">
@@ -30,7 +30,7 @@
 <meta property="og:description" content="[GROMACS] Water - 学习记录（一）">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-04-15T09:14:33.000Z">
-<meta property="article:modified_time" content="2024-04-20T02:34:41.503Z">
+<meta property="article:modified_time" content="2024-04-24T15:17:06.414Z">
 <meta property="article:author" content="Rong-z">
 <meta name="twitter:card" content="summary">
 
@@ -227,7 +227,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-20 10:34:41" itemprop="dateModified" datetime="2024-04-20T10:34:41+08:00">2024-04-20</time>
+                <time title="修改时间：2024-04-24 23:17:06" itemprop="dateModified" datetime="2024-04-24T23:17:06+08:00">2024-04-24</time>
               </span>
 
           
@@ -297,6 +297,7 @@
 <h5 id="模拟生产">模拟生产</h5>
 <p>模拟生产prd.mdp文件如下:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">integrator               = md        </span><br><span class="line">dt                       = 0.002     ; 2 fs</span><br><span class="line">nsteps                   = 5000000   ; 10.0 ns</span><br><span class="line"></span><br><span class="line">nstenergy                = 5000</span><br><span class="line">nstlog                   = 5000</span><br><span class="line">nstxout-compressed       = 2000</span><br><span class="line"></span><br><span class="line">continuation             = yes</span><br><span class="line">constraint-algorithm     = lincs</span><br><span class="line">constraints              = h-bonds</span><br><span class="line"></span><br><span class="line">cutoff-scheme            = Verlet</span><br><span class="line"></span><br><span class="line">coulombtype              = PME</span><br><span class="line">rcoulomb                 = 1.0</span><br><span class="line"></span><br><span class="line">vdwtype                  = Cut-off</span><br><span class="line">rvdw                     = 1.0</span><br><span class="line">DispCorr                 = EnerPres</span><br><span class="line"></span><br><span class="line">tcoupl                   = Nose-Hoover</span><br><span class="line">tc-grps                  = System</span><br><span class="line">tau-t                    = 2.0</span><br><span class="line">ref-t                    = 298.15</span><br><span class="line">nhchainlength            = 1</span><br><span class="line"></span><br><span class="line">pcoupl                   = Parrinello-Rahman </span><br><span class="line">tau_p                    = 4.0</span><br><span class="line">compressibility          = 4.46e-5</span><br><span class="line">ref_p                    = 1.0 </span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gmx_mpi grompp -f mdp/prd.mdp -o prd.tpr -pp prd.top -po prd.mdp -c eql2.gro</span><br><span class="line">$ gmx_mpi mdrun -s prd.tpr -o prd.trr -x prd.xtc -c prd.gro -e prd.edr -g prd.log</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
 <h2 id="轨迹分析">轨迹分析</h2>
@@ -304,6 +305,8 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vmd prd.gro prd.xtc</span><br></pre></td></tr></table></figure>
 <p>上面可视化轨迹并不推荐，而是通过<code>gmx_mpi trjconv</code> 处理之后，通过vmd可视化。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gmx_mpi trjconv -f prd.xtc -s prd.tpr -pbc mol -o prd-mol.xtc</span><br></pre></td></tr></table></figure>
+<p>图片渲染</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./tachyon_LINUXAMD64 0.dat -aasamples 100 -mediumshade -trans_vmd -res 5120 3840 -format BMP -o 0.bmp</span><br></pre></td></tr></table></figure>
 
     </div>
 
@@ -432,7 +435,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -577,5 +580,5 @@ $(document).ready(function() {
 
   
 
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
 </html>
